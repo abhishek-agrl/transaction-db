@@ -2,7 +2,7 @@
 
 A custom, network-available, persistent, and replicated Key/Value storage engine built from scratch using **only the Go standard library**.
 
-TransactionDB utilizes a **Log-Structured Merge-Tree (LSM-Tree)** storage layout, exposes its API over a custom **TCP binary wire protocol**, and synchronizes state across a cluster using a custom consensus algorithm called **"Raft-Lite"**.
+TransactionDB utilizes a **Log-Structured Merge-Tree (LSM-Tree)** storage layout, exposes its API over a custom **TCP binary wire protocol**, and synchronizes state across a cluster using a custom implementation of the "RAFT" consensus algorithm.
 
 ---
 
