@@ -6,7 +6,7 @@ TransactionDB utilizes a **Log-Structured Merge-Tree (LSM-Tree)** storage layout
 
 ---
 
-## 🏛️ System Architecture
+## System Architecture
 
 TransactionDB is composed of three primary layers: **Storage Engine**, **Networking**, and **Consensus**.
 
@@ -54,7 +54,7 @@ TransactionDB is composed of three primary layers: **Storage Engine**, **Network
 
 ---
 
-## 🛠️ Implementation Details & Design Decisions
+## Implementation Details & Design Decisions
 
 ### 1. Zero-Allocation Domain Model ([db.go](file:///Users/abhishek/Developer/transaction-db/db.go))
 To maximize execution speed under high write volumes, `Key` and `Value` are defined as raw byte slices (`[]byte`). This avoids the garbage collection overhead and memory allocation spikes associated with constantly converting between Go `string` and `[]byte` types.
@@ -86,7 +86,7 @@ To maximize execution speed under high write volumes, `Key` and `Value` are defi
 
 ---
 
-## ⚖️ Architectural Trade-offs
+## Architectural Trade-offs
 
 ### 1. Synchronous vs. Background Flushing
 * **Design Decision:** In our implementation, when the Memtable threshold is reached, flushing to an SSTable is executed **synchronously** as part of the client write transaction.
@@ -102,7 +102,7 @@ To maximize execution speed under high write volumes, `Key` and `Value` are defi
 
 ---
 
-## ⚠️ Shortcomings & Future Work
+## Shortcomings & Future Work
 
 ### 1. Read Amplification (Lack of Compaction)
 * **Shortcoming:** Because we flush Memtables to disk but never merge them, the number of SSTable files grows indefinitely over time. To search for a missing key, the engine must perform a point lookup on the Memtable and then on *every single SSTable* from newest to oldest. This creates severe **read amplification** and degrades read latency.
@@ -122,7 +122,7 @@ To maximize execution speed under high write volumes, `Key` and `Value` are defi
 
 ---
 
-## 🚦 Getting Started
+## Getting Started
 
 ### Prerequisites
 * Go 1.22+ installed.
