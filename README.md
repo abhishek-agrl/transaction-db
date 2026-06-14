@@ -122,19 +122,60 @@ To maximize execution speed under high write volumes, `Key` and `Value` are defi
 
 ---
 
-## Getting Started
+## Getting Started & Node Discovery
 
-### Prerequisites
-* Go 1.22+ installed.
+### 1. How Nodes Find Each Other (Peer Discovery)
+Nodes do not require dynamic service discovery (like Consul/DNS) at boot. Instead, they rely on a static configuration list passed via the `-peers` flag:
+* **Configuration:** Every node receives the exact RPC addresses of its peer cluster members at startup.
+* **On-Demand Socket Connections:** When a candidate solicits votes or a leader replicates data, it dials the peer's RPC port on-demand using standard `net/rpc` over TCP (`rpc.Dial`).
+* **Fault Tolerance & Self-Healing:** Because connections are dialed on-demand and closed immediately after RPC execution, nodes do not crash if peers are temporarily offline. If a node crashes and reboots, peers will automatically reconnect and discover it on the next heartbeat/replication cycle.
 
-### Run Tests
-To run all unit and integration tests:
+---
+
+### 2. Compilation
+Compile the CLI server and the POS simulation client binaries using the standard Go compiler:
 ```bash
-go test -v ./...
+# Compile Server
+go build -o txdb cmd/txdb/main.go
+
+# Compile POS Client Simulator
+go build -o pos_client cmd/pos_client/main.go
 ```
 
-### Run Concurrency & Race Tests
-To run the stress tests and verify memory/race safety:
+---
+
+### 3. Run a 3-Node Cluster locally
+To spin up a local 3-node replicated cluster, open three separate terminal windows and run the following commands:
+
+#### Terminal 1: Node 0
+Exposes client TCP database listener on port `8000`, consensus RPC listener on port `9000`, and links to peers `9001` and `9002`:
 ```bash
-go test -race -v ./...
+./txdb -id node_0 -addr 127.0.0.1:8000 -rpc 127.0.0.1:9000 -dir ./data_0 -peers 127.0.0.1:9001,127.0.0.1:9002
 ```
+
+#### Terminal 2: Node 1
+Exposes client TCP database listener on port `8001`, consensus RPC listener on port `9001`, and links to peers `9000` and `9002`:
+```bash
+./txdb -id node_1 -addr 127.0.0.1:8001 -rpc 127.0.0.1:9001 -dir ./data_1 -peers 127.0.0.1:9000,127.0.0.1:9002
+```
+
+#### Terminal 3: Node 2
+Exposes client TCP database listener on port `8002`, consensus RPC listener on port `9002`, and links to peers `9000` and `9001`:
+```bash
+./txdb -id node_2 -addr 127.0.0.1:8002 -rpc 127.0.0.1:9002 -dir ./data_2 -peers 127.0.0.1:9000,127.0.0.1:9001
+```
+
+Once started, the nodes will automatically run Term election tickers. One node will be elected Leader and emit heartbeats, while the others will assume Follower roles.
+
+---
+
+### 4. Run the Test Suites
+* **Run All Tests:**
+  ```bash
+  go test -v ./...
+  ```
+* **Run with Go Race Detector:**
+  ```bash
+  go test -race -v ./...
+  ```
+
